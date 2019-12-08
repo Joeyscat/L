@@ -1,5 +1,5 @@
 module.exports = {
-  title: 'Vue Admin Template',
+  title: 'Local Library',
 
   /**
    * @type {boolean} true | false

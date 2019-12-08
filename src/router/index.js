@@ -51,7 +51,7 @@ export const constantRoutes = [
       path: 'dashboard',
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index'),
-      meta: { title: 'Dashboard', icon: 'dashboard' }
+      meta: { title: '仪表盘', icon: 'dashboard' }
     }]
   },
 
@@ -63,7 +63,33 @@ export const constantRoutes = [
         path: 'index',
         component: () => import('@/views/user/index'),
         name: 'User',
-        meta: { title: 'User', icon: 'user', noCache: true, roles: ['admin', 'editor'] }
+        meta: { title: '用户', icon: 'user', noCache: true, roles: ['admin', 'editor'] }
+      }
+    ]
+  },
+
+  {
+    path: '/book',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/book/index'),
+        name: 'Book',
+        meta: { title: '书籍', icon: 'table', noCache: true, roles: ['admin', 'editor'] }
+      }
+    ]
+  },
+
+  {
+    path: '/genre',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/genre/index'),
+        name: 'Genre',
+        meta: { title: '书籍类型', icon: 'table', noCache: true, roles: ['admin', 'editor'] }
       }
     ]
   },
@@ -73,7 +99,7 @@ export const constantRoutes = [
     component: Layout,
     redirect: '/example/table',
     name: 'Example',
-    meta: { title: 'Example', icon: 'example' },
+    meta: { title: '综合实例', icon: 'example' },
     children: [
       {
         path: 'table',
@@ -98,7 +124,7 @@ export const constantRoutes = [
         path: 'index',
         name: 'Form',
         component: () => import('@/views/form/index'),
-        meta: { title: 'Form', icon: 'form' }
+        meta: { title: '表单', icon: 'form' }
       }
     ]
   },
