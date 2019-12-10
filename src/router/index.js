@@ -76,7 +76,7 @@ export const constantRoutes = [
         path: 'index',
         component: () => import('@/views/book/index'),
         name: 'Book',
-        meta: { title: '书籍', icon: 'table', noCache: true, roles: ['admin', 'editor'] }
+        meta: { title: '书籍', icon: 'education', noCache: true, roles: ['admin', 'editor'] }
       }
     ]
   },
@@ -89,7 +89,20 @@ export const constantRoutes = [
         path: 'index',
         component: () => import('@/views/genre/index'),
         name: 'Genre',
-        meta: { title: '书籍类型', icon: 'table', noCache: true, roles: ['admin', 'editor'] }
+        meta: { title: '书籍类型', icon: 'tree-table', noCache: true, roles: ['admin', 'editor'] }
+      }
+    ]
+  },
+
+  {
+    path: '/author',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/author/index'),
+        name: 'Author',
+        meta: { title: '作者', icon: 'people', noCache: true, roles: ['admin', 'editor'] }
       }
     ]
   },
