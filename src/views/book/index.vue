@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-button type="primary" @click="handleAddBook">New Book</el-button>
+    <el-button type="primary" @click="handleAddBook">添加书籍</el-button>
 
     <el-table
       v-loading="listLoading"
@@ -18,13 +18,13 @@
 
       <el-table-column min-width="40px" align="center" label="作者">
         <template slot-scope="{row}">
-          <span>{{ row.author_name }}</span>
+          <span>{{ row.author ? (row.author.family_name+row.author.first_name) : "" }}</span>
         </template>
       </el-table-column>
 
       <el-table-column min-width="40px" align="center" label="类型">
         <template slot-scope="{row}">
-          <span>{{ row.genres }}</span>
+          <span>{{ (row.genre.map(g => genreMap.get(g._id))).join(", ") }}</span>
         </template>
       </el-table-column>
 
@@ -34,9 +34,10 @@
         </template>
       </el-table-column>
 
-      <el-table-column align="center" label="Actions" width="120">
+      <el-table-column align="center" label="Actions" width="200">
         <template slot-scope="scope">
-          <el-button type="primary" size="small" icon="el-icon-edit" @click="handleEdit(scope)">Edit</el-button>
+          <el-button type="primary" size="small" icon="el-icon-edit" @click="handleEdit(scope)">编辑</el-button>
+          <el-button type="danger" size="small" icon="el-icon-delete" @click="handleEdit(scope)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -49,15 +50,41 @@
       @pagination="getList"
     />
 
-    <el-dialog :visible.sync="dialogVisible" :title="dialogType==='edit'?'Edit Book':'New Book'">
+    <el-dialog :visible.sync="dialogVisible" :title="dialogType==='edit'?'编辑书籍':'添加书籍'">
       <el-form :model="book" label-width="80px" label-position="left">
-        <el-form-item label="Name">
-          <el-input v-model="book.title" placeholder="Book Title" />
+        <el-form-item label="书名">
+          <el-input v-model="book.title" placeholder="书名" />
+        </el-form-item>
+        <el-form-item label="作者">
+          <el-drag-select v-model="authorIds" style="width:100%;" placeholder="请选择">
+            <el-option
+              v-for="item in authorList"
+              :key="item._id"
+              :label="item.name"
+              :value="item._id"
+            />
+          </el-drag-select>
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-drag-select v-model="genreIds" style="width:100%;" multiple placeholder="请选择">
+            <el-option
+              v-for="item in genreList"
+              :key="item._id"
+              :label="item.name"
+              :value="item._id"
+            />
+          </el-drag-select>
+        </el-form-item>
+        <el-form-item label="简介">
+          <el-input v-model="book.summary" placeholder="简洁" />
+        </el-form-item>
+        <el-form-item label="ISBN">
+          <el-input v-model="book.isbn" placeholder="ISBN" />
         </el-form-item>
       </el-form>
       <div style="text-align:right;">
-        <el-button type="danger" @click="dialogVisible=false">Cancel</el-button>
-        <el-button type="primary" @click="confirmBook">Confirm</el-button>
+        <el-button type="danger" @click="dialogVisible=false">取消</el-button>
+        <el-button type="primary" @click="confirmBook">确定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -67,6 +94,9 @@
 import { deepClone } from "@/utils";
 import { parseTime } from "@/utils/index.js";
 import { fetchList, addBook, updateBook } from "@/api/book";
+import { fetchList as fetchAuthorList } from "@/api/author";
+import { fetchList as fetchGenreList } from "@/api/genre";
+import ElDragSelect from "@/components/DragSelect";
 import Pagination from "@/components/Pagination"; // Secondary package based on el-pagination
 
 const defaultBook = {
@@ -80,11 +110,16 @@ const defaultBook = {
 
 export default {
   name: "BookList",
-  components: { Pagination },
+  components: { Pagination, ElDragSelect },
   data() {
     return {
       book: Object.assign({}, defaultBook),
       bookList: [],
+      authorList: [],
+      authorIds: [],
+      genreList: [],
+      genreMap: new Map(),
+      genreIds: [],
       total: 0,
       listLoading: true,
       listQuery: {
@@ -103,41 +138,74 @@ export default {
   },
   created() {
     this.getList();
+    this.getAuthors();
+    this.getGenres();
   },
   methods: {
     getList() {
       this.listLoading = true;
       fetchList(this.listQuery).then(response => {
         console.log(response);
-        const items = response.data.items;
-        this.bookList = items.map(item => {
-          item.author_name = item.author ? item.author.name : "";
-          let genres = "";
-          item.genre.forEach(i => {
-            genres += i.name + "，";
-          });
-          item.genres = genres.slice(0, -1);
-        });
-        this.bookList = items;
+        this.bookList = response.data.items;
         this.total = response.data.total;
         this.listLoading = false;
       });
     },
 
+    getAuthors() {
+      this.listLoading = true;
+      fetchAuthorList().then(response => {
+        console.log(response);
+        this.authorList = response.data.items;
+        this.listLoading = false;
+      });
+    },
+    getGenres() {
+      this.listLoading = true;
+      fetchGenreList().then(response => {
+        console.log(response);
+        this.genreList = response.data.items;
+        this.genreList.forEach(g => this.genreMap.set(g._id, g.name));
+        this.listLoading = false;
+      });
+    },
+
     handleAddBook() {
-      this.user = Object.assign({}, defaultBook);
+      this.authorIds = [];
+      this.genreIds = [];
+      this.book = Object.assign({}, defaultBook);
       this.dialogType = "new";
       this.dialogVisible = true;
     },
     handleEdit(scope) {
       this.dialogType = "edit";
       this.dialogVisible = true;
-      this.user = deepClone(scope.row);
+      this.book = deepClone(scope.row);
+      this.authorIds = this.book.author ? [this.book.author._id] : [];
+      this.genreIds = [];
+      let gen = this.book.genre;
+      if (gen) {
+        gen.forEach(g => {
+          this.genreIds.push(g._id);
+        });
+      }
     },
     async confirmBook() {
       const isEdit = this.dialogType === "edit";
 
+      this.authorList.forEach(author => {
+        if (author._id === this.authorIds[0]) {
+          this.book.author = author;
+        }
+      });
+
+      this.book.genre = [];
+      this.genreIds.forEach(_id => {
+        this.book.genre.push({ _id, name: "" });
+      });
+
       if (isEdit) {
+        console.log("update book ", this.book);
         await updateBook(this.book);
         for (let index = 0; index < this.bookList.length; index++) {
           if (this.bookList[index]._id === this.book._id) {

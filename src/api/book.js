@@ -1,8 +1,10 @@
 import request from '@/utils/request'
 
+const baseURL = 'http://127.0.0.1:3000/api'
+
 export function fetchList(query) {
   return request({
-    baseURL: 'http://127.0.0.1:3000/api',
+    baseURL,
     url: '/catalog/books',
     method: 'get',
     params: query
@@ -11,6 +13,7 @@ export function fetchList(query) {
 
 export function fetchBook(id) {
   return request({
+    baseURL,
     url: `/catalog/books/${id}`,
     method: 'get'
   })
@@ -18,6 +21,7 @@ export function fetchBook(id) {
 
 export function updateBook(data) {
   return request({
+    baseURL,
     url: `/catalog/books`,
     method: 'put',
     data
@@ -26,6 +30,7 @@ export function updateBook(data) {
 
 export function addBook(data) {
   return request({
+    baseURL,
     url: '/catalog/books',
     method: 'post',
     data
