@@ -69,6 +69,19 @@ export const constantRoutes = [
   },
 
   {
+    path: '/bookinstance',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/bookinstance/index'),
+        name: 'Bookinstance',
+        meta: { title: '书籍实例', icon: 'education', noCache: true, roles: ['admin', 'editor'] }
+      }
+    ]
+  },
+
+  {
     path: '/book',
     component: Layout,
     children: [
