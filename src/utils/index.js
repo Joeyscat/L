@@ -127,3 +127,11 @@ export function deepClone(source) {
   })
   return targetObj
 }
+
+export function formatDate(date) {
+  if (!date) {
+    return '/'
+  }
+  const dateFormatted = parseTime(date, '{y}/{m}/{d}')
+  return dateFormatted === 'NaN/NaN/NaN' ? '/' : dateFormatted
+}

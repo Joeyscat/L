@@ -27,7 +27,7 @@
       </el-table-column>
       <el-table-column min-width="60px" align="center" label="归还时间">
         <template slot-scope="{row}">
-          <span>{{ row.due_back }}</span>
+          <span>{{ formatDate(row.due_back) }}</span>
         </template>
       </el-table-column>
 
@@ -50,20 +50,26 @@
     <el-dialog :visible.sync="dialogVisible" :title="dialogType==='edit'?'编辑书籍实例':'添加书籍实例'">
       <el-form :model="bookinstance" label-width="80px" label-position="left">
         <el-form-item label="书籍">
-          <el-drag-select v-model="bookIds" style="width:100%;" placeholder="书籍">
+          <el-select v-if="dialogType!=='edit'" v-model="bookIds" placeholder="请选择">
             <el-option
               v-for="item in bookList"
               :key="item._id"
               :label="item.title"
-              :value="item._id"
-            />
-          </el-drag-select>
+              :value="item._id">
+            </el-option>
+          </el-select>
+          <el-input v-if="dialogType==='edit'" v-model="bookinstance.book.title" disabled/>
         </el-form-item>
         <el-form-item label="出版社">
-          <el-input v-model="bookinstance.imprint" placeholder="出版社" />
+          <el-input v-model="bookinstance.imprint" placeholder="出版社"/>
         </el-form-item>
         <el-form-item label="归还时间">
-          <el-input v-model="bookinstance.due_back" placeholder="归还时间" />
+          <el-date-picker
+            v-model="bookinstance.due_back"
+            type="datetime"
+            format="yyyy-MM-dd HH:mm:ss"
+            placeholder="Select date and time"
+          />
         </el-form-item>
       </el-form>
       <div style="text-align:right;">
@@ -75,27 +81,26 @@
 </template>
 
 <script>
-import { deepClone } from "@/utils";
-import { parseTime } from "@/utils/index.js";
+import { deepClone,parseTime, formatDate } from '@/utils'
 import {
   fetchList,
   addBookinstance,
   updateBookinstance
-} from "@/api/bookinstance";
-import { fetchList as fetchBookList, addBook, updateBook } from "@/api/book";
-import ElDragSelect from "@/components/DragSelect";
-import Pagination from "@/components/Pagination"; // Secondary package based on el-pagination
+} from '@/api/bookinstance'
+import { fetchList as fetchBookList, addBook, updateBook } from '@/api/book'
+import ElDragSelect from '@/components/DragSelect'
+import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 
 const defaultBookinstance = {
-  _id: "",
+  _id: '',
   book: {},
-  status: "",
-  imprint: "",
-  due_back: ""
-};
+  status: '',
+  imprint: '',
+  due_back: ''
+}
 
 export default {
-  name: "BookinstanceList",
+  name: 'BookinstanceList',
   components: { Pagination, ElDragSelect },
   data() {
     return {
@@ -111,95 +116,98 @@ export default {
       },
       routes: [],
       dialogVisible: false,
-      dialogType: "new",
+      dialogType: 'new',
       checkStrictly: false,
       defaultProps: {
-        children: "children",
-        label: "title"
+        children: 'children',
+        label: 'title'
       }
-    };
+    }
   },
   created() {
-    this.getList();
-    this.getBooks();
+    this.getList()
+    this.getBooks()
   },
   methods: {
     getList() {
-      this.listLoading = true;
+      this.listLoading = true
       fetchList(this.listQuery).then(response => {
-        console.log(response);
-        this.bookinstanceList = response.data.items;
-        this.total = response.data.total;
-        this.listLoading = false;
-      });
+        console.log(response)
+        this.bookinstanceList = response.data.items
+        this.total = response.data.total
+        this.listLoading = false
+      })
     },
 
     getBooks() {
-      this.listLoading = true;
+      this.listLoading = true
       fetchBookList().then(response => {
-        console.log(response);
-        this.bookList = response.data.items;
-        this.listLoading = false;
-      });
+        console.log(response)
+        this.bookList = response.data.items
+        this.listLoading = false
+      })
     },
 
     handleAddBookinstance() {
-      this.bookinstance = Object.assign({}, defaultBookinstance);
-      this.dialogType = "new";
-      this.dialogVisible = true;
+      this.bookinstance = Object.assign({}, defaultBookinstance)
+      this.dialogType = 'new'
+      this.dialogVisible = true
     },
 
     handleEdit(scope) {
-      this.dialogType = "edit";
-      this.dialogVisible = true;
-      this.bookinstance = deepClone(scope.row);
+      this.dialogType = 'edit'
+      this.dialogVisible = true
+      this.bookinstance = deepClone(scope.row)
     },
     async confirmBook() {
-      const isEdit = this.dialogType === "edit";
+      const isEdit = this.dialogType === 'edit'
 
       if (isEdit) {
-        console.log("update bookinstance ", this.bookinstance);
-        await updateBook(this.bookinstance);
+        console.log('update bookinstance ', this.bookinstance)
+        await updateBook(this.bookinstance)
         for (let index = 0; index < this.bookinstanceList.length; index++) {
           if (this.bookinstanceList[index]._id === this.bookinstance._id) {
             this.bookinstanceList.splice(
               index,
               1,
               Object.assign({}, this.bookinstance)
-            );
-            break;
+            )
+            break
           }
         }
       } else {
-        const { data } = await addBook(this.bookinstance);
-        this.bookinstance._id = data._id;
-        this.bookinstanceList.push(this.bookinstance);
+        const { data } = await addBook(this.bookinstance)
+        this.bookinstance._id = data._id
+        this.bookinstanceList.push(this.bookinstance)
       }
 
-      const { _id, title } = this.bookinstance;
-      this.dialogVisible = false;
+      const { _id, title } = this.bookinstance
+      this.dialogVisible = false
       this.$notify({
-        title: "Success",
+        title: 'Success',
         dangerouslyUseHTMLString: true,
         message: `
-          <div>Book ID: ${_id}</div>
-          <div>Book Title : ${title}</div>
-        `,
-        type: "success"
-      });
+        <div>Book ID: ${_id}</div>
+        <div>Book Title : ${title}</div>
+      `,
+        type: 'success'
+      })
+    },
+    formatDate(date) {
+      return formatDate(date)
     }
   }
-};
+}
 </script>
 
 <style scoped>
-.edit-input {
-  padding-right: 100px;
-}
+  .edit-input {
+    padding-right: 100px;
+  }
 
-.cancel-btn {
-  position: absolute;
-  right: 15px;
-  top: 10px;
-}
+  .cancel-btn {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+  }
 </style>

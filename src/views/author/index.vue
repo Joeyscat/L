@@ -85,7 +85,7 @@
 </template>
 
 <script>
-import { deepClone, parseTime } from "@/utils";
+import { deepClone, parseTime, formatDate } from "@/utils";
 import { fetchList, addAuthor, updateAuthor } from "@/api/author";
 import Pagination from "@/components/Pagination"; // Secondary package based on el-pagination
 
@@ -178,12 +178,8 @@ export default {
         type: "success"
       });
     },
-    formatDate: function(date) {
-      if (!date) {
-        return "/";
-      }
-      const dateFormatted = parseTime(date, "{y}/{m}/{d}");
-      return dateFormatted === "NaN/NaN/NaN" ? "/" : dateFormatted;
+    formatDate(date) {
+      return formatDate(date)
     }
   },
   computed: {}
