@@ -36,3 +36,12 @@ export function addBookinstance(data) {
     data
   })
 }
+
+export function deleteBookinstance(id) {
+  return request({
+    baseURL,
+    url: `/catalog/bookinstances/${id}`,
+    method: 'delete'
+  })
+}
+

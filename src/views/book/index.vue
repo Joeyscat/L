@@ -144,7 +144,6 @@ export default {
     getList() {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
-        console.log(response)
         this.bookList = response.data.items
         this.total = response.data.total
         this.listLoading = false
@@ -162,7 +161,6 @@ export default {
     getGenres() {
       this.listLoading = true
       fetchGenreList().then(response => {
-        console.log(response)
         this.genreList = response.data.items
         this.genreList.forEach(g => this.genreMap.set(g._id, g.name))
         this.listLoading = false
@@ -219,7 +217,6 @@ export default {
       })
 
       if (this.dialogType === 'edit') {
-        console.log('update book ', this.book)
         await updateBook(this.book)
         for (let index = 0; index < this.bookList.length; index++) {
           if (this.bookList[index]._id === selectedId) {
@@ -233,10 +230,7 @@ export default {
         this.bookList.push(this.book)
       } else if (this.dialogType === 'delete') {
         const { data } = await deleteBook(selectedId)
-        console.log(data)
         for (let i = 0; i < this.bookList.length; i++) {
-          console.log(this.bookList[i]._id, data.id)
-          console.log(this.bookList[i]._id === data.id)
           if (this.bookList[i]._id === data.id) {
             this.bookList.splice(i, 1)
             break

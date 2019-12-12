@@ -39,7 +39,7 @@
       <el-table-column align="center" label="操作" width="200">
         <template slot-scope="scope">
           <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(scope)">编辑</el-button>
-          <el-button type="danger" size="mini" icon="el-icon-delete" @click="handleEdit(scope)">删除</el-button>
+          <el-button type="danger" size="mini" icon="el-icon-delete" @click="handleDelete(scope)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -52,7 +52,7 @@
       @pagination="getList"
     />
 
-    <el-dialog :visible.sync="dialogVisible" :title="dialogType==='edit'?'编辑书籍实例':'添加书籍实例'">
+    <el-dialog :visible.sync="dialogVisible" :title="dialogTitle(dialogType)">
       <el-form :model="bookinstance" label-width="80px" label-position="left">
         <el-form-item label="书籍">
           <el-select v-if="dialogType!=='edit'" v-model="bookinstance.book._id" placeholder="请选择">
@@ -89,7 +89,7 @@
       </el-form>
       <div style="text-align:right;">
         <el-button type="danger" @click="dialogVisible=false">取消</el-button>
-        <el-button type="primary" @click="confirmBook">确定</el-button>
+        <el-button type="primary" @click="confirmBookinstance">确定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -100,7 +100,8 @@ import { deepClone, formatDate } from '@/utils'
 import {
   fetchList,
   addBookinstance,
-  updateBookinstance
+  updateBookinstance,
+  deleteBookinstance
 } from '@/api/bookinstance'
 import { fetchList as fetchBookList } from '@/api/book'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
@@ -147,7 +148,6 @@ export default {
     getList() {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
-        console.log(response)
         this.bookinstanceList = response.data.items
         this.total = response.data.total
         this.listLoading = false
@@ -156,8 +156,8 @@ export default {
 
     getBooks() {
       this.listLoading = true
+      // TODO 不需要查询全部的book字段
       fetchBookList().then(response => {
-        console.log(response)
         this.bookList = response.data.items
         this.listLoading = false
       })
@@ -174,10 +174,16 @@ export default {
       this.dialogVisible = true
       this.bookinstance = deepClone(scope.row)
     },
-    async confirmBook() {
-      const isEdit = this.dialogType === 'edit'
 
-      if (isEdit) {
+    handleDelete(scope) {
+      this.dialogType = 'delete'
+      this.dialogVisible = true
+      this.bookinstance = deepClone(scope.row)
+    },
+
+    async confirmBookinstance() {
+      const selectedId = this.bookinstance._id
+      if (this.dialogType === 'edit') {
         console.log('update bookinstance ', this.bookinstance)
         await updateBookinstance(this.bookinstance)
         for (let index = 0; index < this.bookinstanceList.length; index++) {
@@ -190,26 +196,39 @@ export default {
             break
           }
         }
-      } else {
+      } else if (this.dialogType === 'new') {
         const { data } = await addBookinstance(this.bookinstance)
         this.bookinstance = data
         this.bookinstanceList.push(this.bookinstance)
+      } else if (this.dialogType === 'delete') {
+        const { data } = await deleteBookinstance(selectedId)
+        for (let i = 0; i < this.bookinstanceList.length; i++) {
+          if (this.bookinstanceList[i]._id === data.id) {
+            this.bookinstanceList.splice(i, 1)
+            break
+          }
+        }
+      } else {
+        console.error('这是啥操作？？')
       }
 
-      const { _id, title } = this.bookinstance
+      const { _id, book } = this.bookinstance
       this.dialogVisible = false
       this.$notify({
         title: 'Success',
         dangerouslyUseHTMLString: true,
         message: `
         <div>Book ID: ${_id}</div>
-        <div>Book Title : ${title}</div>
+        <div>Book Title : ${book.title}</div>
       `,
         type: 'success'
       })
     },
     formatDate(date) {
       return formatDate(date)
+    },
+    dialogTitle(dialogType) {
+      return dialogType === 'edit' ? '编辑书籍' : dialogType === 'new' ? '添加书籍' : '删除书籍'
     }
   }
 }
