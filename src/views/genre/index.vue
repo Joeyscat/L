@@ -25,8 +25,8 @@
 
       <el-table-column align="center" label="操作" width="220">
         <template slot-scope="scope">
-          <el-button type="primary" size="small" icon="el-icon-edit" @click="handleEdit(scope)">编辑</el-button>
-          <el-button type="danger" size="small" icon="el-icon-delete" @click="handleEdit(scope)">删除</el-button>
+          <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(scope)">编辑</el-button>
+          <el-button type="danger" size="mini" icon="el-icon-delete" @click="handleDelete(scope)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -39,7 +39,7 @@
       @pagination="getList"
     />
 
-    <el-dialog :visible.sync="dialogVisible" :title="dialogType==='edit'?'编辑类型':'添加类型'">
+    <el-dialog :visible.sync="dialogVisible" :title="dialogType==='delete'?'删除类型':dialogType==='edit'?'编辑类型':'添加类型'">
       <el-form :model="genre" label-width="80px" label-position="left">
         <el-form-item label="Name">
           <el-input v-model="genre.name" placeholder="类型名称"/>
@@ -55,7 +55,7 @@
 
 <script>
 import { deepClone } from '@/utils'
-import { fetchList, addGenre, updateGenre } from '@/api/genre'
+import { fetchList, addGenre, updateGenre, deleteGenre } from '@/api/genre'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 
 const defaultGenre = {
@@ -117,20 +117,31 @@ export default {
       this.genre = deepClone(scope.row)
     },
     async confirmGenre() {
-      const isEdit = this.dialogType === 'edit'
-
-      if (isEdit) {
+      const selectedId = this.genre._id
+      if (this.dialogType === 'edit') {
         await updateGenre(this.genre)
         for (let index = 0; index < this.genreList.length; index++) {
-          if (this.genreList[index]._id === this.genre._id) {
+          if (this.genreList[index]._id === selectedId) {
             this.genreList.splice(index, 1, Object.assign({}, this.genre))
             break
           }
         }
-      } else {
+      } else if (this.dialogType === 'new') {
         const { data } = await addGenre(this.genre)
         this.genre._id = data._id
         this.genreList.push(this.genre)
+      } else if (this.dialogType === 'delete') {
+        const { data } = await deleteGenre(selectedId)
+        console.log(data)
+        for (let i = 0; i < this.genreList.length; i++) {
+          const genre = this.genreList[i]
+          if (genre._id === data.id) {
+            this.genreList.splice(i, 1)
+            break
+          }
+        }
+      } else {
+        console.error('这是啥操作？？')
       }
 
       const { _id, name } = this.genre

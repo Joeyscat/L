@@ -36,8 +36,8 @@
 
       <el-table-column align="center" label="Actions" width="200">
         <template slot-scope="scope">
-          <el-button type="primary" size="small" icon="el-icon-edit" @click="handleEdit(scope)">编辑</el-button>
-          <el-button type="danger" size="small" icon="el-icon-delete" @click="handleEdit(scope)">删除</el-button>
+          <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(scope)">编辑</el-button>
+          <el-button type="danger" size="mini" icon="el-icon-delete" @click="handleEdit(scope)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>

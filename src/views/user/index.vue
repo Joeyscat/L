@@ -49,7 +49,7 @@
 
       <el-table-column align="center" label="Actions" width="120">
         <template slot-scope="scope">
-          <el-button type="primary" size="small" icon="el-icon-edit" @click="handleEdit(scope)">Edit</el-button>
+          <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(scope)">Edit</el-button>
         </template>
       </el-table-column>
     </el-table>

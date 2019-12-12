@@ -36,3 +36,11 @@ export function addGenre(data) {
     data
   })
 }
+
+export function deleteGenre(id) {
+  return request({
+    baseURL,
+    url: `/catalog/genres/${id}`,
+    method: 'delete'
+  })
+}
