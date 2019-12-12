@@ -36,3 +36,12 @@ export function addBook(data) {
     data
   })
 }
+
+export function deleteBook(id) {
+  return request({
+    baseURL,
+    url: `/catalog/books/${id}`,
+    method: 'delete'
+  })
+}
+

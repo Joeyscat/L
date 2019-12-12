@@ -39,7 +39,7 @@
       @pagination="getList"
     />
 
-    <el-dialog :visible.sync="dialogVisible" :title="dialogType==='delete'?'删除类型':dialogType==='edit'?'编辑类型':'添加类型'">
+    <el-dialog :visible.sync="dialogVisible" :title="dialogTitle(dialogType)">
       <el-form :model="genre" label-width="80px" label-position="left">
         <el-form-item label="Name">
           <el-input v-model="genre.name" placeholder="类型名称"/>
@@ -132,7 +132,6 @@ export default {
         this.genreList.push(this.genre)
       } else if (this.dialogType === 'delete') {
         const { data } = await deleteGenre(selectedId)
-        console.log(data)
         for (let i = 0; i < this.genreList.length; i++) {
           const genre = this.genreList[i]
           if (genre._id === data.id) {
@@ -155,6 +154,9 @@ export default {
         `,
         type: 'success'
       })
+    },
+    dialogTitle(dialogType) {
+      return dialogType === 'edit' ? '编辑类型' : dialogType === 'new' ? '添加类型' : '删除类型'
     }
   }
 }

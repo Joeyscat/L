@@ -25,7 +25,7 @@
       <el-table-column align="center" label="操作" width="220">
         <template slot-scope="scope">
           <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(scope)">编辑</el-button>
-          <el-button type="danger" size="mini" icon="el-icon-delete" @click="handleEdit(scope)">删除</el-button>
+          <el-button type="danger" size="mini" icon="el-icon-delete" @click="handleDelete(scope)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -38,7 +38,8 @@
       @pagination="getList"
     />
 
-    <el-dialog :visible.sync="dialogVisible" :title="dialogType==='edit'?'编辑作者':'添加作者'">
+<!--    <el-dialog :visible.sync="dialogVisible" :title="dialogType==='edit'?'编辑作者':'添加作者'">-->
+    <el-dialog :visible.sync="dialogVisible" :title="dialogTitle(dialogType)">
       <el-form :model="author" label-width="80px" label-position="left">
         <el-row>
           <el-col :span="10">
@@ -85,8 +86,8 @@
 </template>
 
 <script>
-import { deepClone, parseTime, formatDate } from '@/utils'
-import { fetchList, addAuthor, updateAuthor } from '@/api/author'
+import { deepClone, formatDate } from '@/utils'
+import { fetchList, addAuthor, updateAuthor, deleteAuthor } from '@/api/author'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 
 const defaultAuthor = {
@@ -150,20 +151,30 @@ export default {
       this.author = deepClone(scope.row)
     },
     async confirmAuthor() {
-      const isEdit = this.dialogType === 'edit'
-
-      if (isEdit) {
+      const selectedId = this.author._id
+      if (this.dialogType === 'edit') {
         await updateAuthor(this.author)
         for (let index = 0; index < this.authorList.length; index++) {
-          if (this.authorList[index]._id === this.author._id) {
+          if (this.authorList[index]._id === selectedId) {
             this.authorList.splice(index, 1, Object.assign({}, this.author))
             break
           }
         }
-      } else {
+      } else if (this.dialogType === 'new') {
         const { data } = await addAuthor(this.author)
         this.author._id = data._id
         this.authorList.push(this.author)
+      } else if (this.dialogType === 'delete') {
+        const { data } = await deleteAuthor(selectedId)
+        for (let i = 0; i < this.authorList.length; i++) {
+          const author = this.authorList[i]
+          if (author._id === data.id) {
+            this.authorList.splice(i, 1)
+            break
+          }
+        }
+      } else {
+        console.error('这是啥操作？？')
       }
 
       const { _id, name } = this.author
@@ -180,6 +191,9 @@ export default {
     },
     formatDate(date) {
       return formatDate(date)
+    },
+    dialogTitle(dialogType) {
+      return dialogType === 'edit' ? '编辑作者' : dialogType === 'new' ? '添加作者' : '删除作者'
     }
   },
   computed: {}

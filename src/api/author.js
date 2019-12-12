@@ -36,3 +36,11 @@ export function addAuthor(data) {
     data
   })
 }
+
+export function deleteAuthor(id) {
+  return request({
+    baseURL,
+    url: `/catalog/authors/${id}`,
+    method: 'delete'
+  })
+}
