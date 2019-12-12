@@ -73,10 +73,13 @@ service.interceptors.response.use(
     }
   },
   error => {
-    const result = error.response.data
-    console.error(result.message) // for debug
+    let message = error.response.data.message
+    console.error(message) // for debug
+    if (message instanceof Array && message.length > 0){
+      message = (message.map(m => m.msg)).join(', ')
+    }
     Message({
-      message: result.message,
+      message,
       type: 'error',
       duration: 5 * 1000
     })

@@ -15,6 +15,11 @@
           <span>{{ row.book.title }}</span>
         </template>
       </el-table-column>
+      <el-table-column min-width="40px" align="center" label="作者">
+        <template slot-scope="{row}">
+          <span>{{ row.book.author.name }}</span>
+        </template>
+      </el-table-column>
       <el-table-column min-width="60px" align="center" label="出版社">
         <template slot-scope="{row}">
           <span>{{ row.imprint }}</span>
@@ -50,7 +55,7 @@
     <el-dialog :visible.sync="dialogVisible" :title="dialogType==='edit'?'编辑书籍实例':'添加书籍实例'">
       <el-form :model="bookinstance" label-width="80px" label-position="left">
         <el-form-item label="书籍">
-          <el-select v-if="dialogType!=='edit'" v-model="bookIds" placeholder="请选择">
+          <el-select v-if="dialogType!=='edit'" v-model="bookinstance.book._id" placeholder="请选择">
             <el-option
               v-for="item in bookList"
               :key="item._id"
@@ -59,6 +64,16 @@
             </el-option>
           </el-select>
           <el-input v-if="dialogType==='edit'" v-model="bookinstance.book.title" disabled/>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="bookinstance.status" placeholder="请选择">
+            <el-option
+              v-for="item in status"
+              :key="item"
+              :label="item"
+              :value="item">
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="出版社">
           <el-input v-model="bookinstance.imprint" placeholder="出版社"/>
@@ -81,14 +96,13 @@
 </template>
 
 <script>
-import { deepClone,parseTime, formatDate } from '@/utils'
+import { deepClone, formatDate } from '@/utils'
 import {
   fetchList,
   addBookinstance,
   updateBookinstance
 } from '@/api/bookinstance'
-import { fetchList as fetchBookList, addBook, updateBook } from '@/api/book'
-import ElDragSelect from '@/components/DragSelect'
+import { fetchList as fetchBookList } from '@/api/book'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 
 const defaultBookinstance = {
@@ -101,7 +115,7 @@ const defaultBookinstance = {
 
 export default {
   name: 'BookinstanceList',
-  components: { Pagination, ElDragSelect },
+  components: { Pagination },
   data() {
     return {
       bookinstance: Object.assign({}, defaultBookinstance),
@@ -109,6 +123,7 @@ export default {
       bookList: [],
       bookIds: [],
       total: 0,
+      status: ['可供借阅', '馆藏维护', '已借出'],
       listLoading: true,
       listQuery: {
         page: 1,
@@ -164,7 +179,7 @@ export default {
 
       if (isEdit) {
         console.log('update bookinstance ', this.bookinstance)
-        await updateBook(this.bookinstance)
+        await updateBookinstance(this.bookinstance)
         for (let index = 0; index < this.bookinstanceList.length; index++) {
           if (this.bookinstanceList[index]._id === this.bookinstance._id) {
             this.bookinstanceList.splice(
@@ -176,8 +191,8 @@ export default {
           }
         }
       } else {
-        const { data } = await addBook(this.bookinstance)
-        this.bookinstance._id = data._id
+        const { data } = await addBookinstance(this.bookinstance)
+        this.bookinstance = data
         this.bookinstanceList.push(this.bookinstance)
       }
 
