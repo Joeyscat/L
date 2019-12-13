@@ -11,6 +11,15 @@ export function fetchList(query) {
   })
 }
 
+export function searchByName(query) {
+  return request({
+    baseURL,
+    url: '/catalog/authorsByName',
+    method: 'get',
+    params: query
+  })
+}
+
 export function fetchAuthor(id) {
   return request({
     baseURL,

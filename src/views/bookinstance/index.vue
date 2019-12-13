@@ -156,7 +156,7 @@ export default {
 
     getBooks() {
       this.listLoading = true
-      // TODO 不需要查询全部的book字段
+      // TODO 1.在填写表单的时候点击按钮查询 2.不需要查询book全部字段
       fetchBookList().then(response => {
         this.bookList = response.data.items
         this.listLoading = false

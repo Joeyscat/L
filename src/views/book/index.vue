@@ -56,17 +56,25 @@
           <el-input v-model="book.title" placeholder="书名"/>
         </el-form-item>
         <el-form-item label="作者">
-          <el-drag-select v-model="authorIds" style="width:100%;" placeholder="请选择">
+          <el-select
+            v-model="book.author._id"
+            style="width:100%;"
+            filterable
+            remote
+            placeholder="请输入关键词"
+            no-data-text="找不到该作者"
+            :remote-method="searchAuthor"
+            :loading="loading">
             <el-option
-              v-for="item in authorList"
+              v-for="item in authorOptions"
               :key="item._id"
               :label="item.name"
-              :value="item._id"
-            />
-          </el-drag-select>
+              :value="item._id">
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="类型">
-          <el-drag-select v-model="genreIds" style="width:100%;" multiple placeholder="请选择">
+          <el-drag-select v-model="currentGenreIds" style="width:100%;" multiple placeholder="请选择">
             <el-option
               v-for="item in genreList"
               :key="item._id"
@@ -93,10 +101,10 @@
 <script>
 import { deepClone } from '@/utils'
 import { fetchList, addBook, updateBook, deleteBook } from '@/api/book'
-import { fetchList as fetchAuthorList } from '@/api/author'
+import { searchByName as searchAuthorByName } from '@/api/author'
 import { fetchList as fetchGenreList } from '@/api/genre'
 import ElDragSelect from '@/components/DragSelect'
-import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
+import Pagination from '@/components/Pagination'
 
 const defaultBook = {
   genre: [],
@@ -114,12 +122,12 @@ export default {
     return {
       book: Object.assign({}, defaultBook),
       bookList: [],
-      authorList: [],
-      authorIds: [],
       genreList: [],
       genreMap: new Map(),
-      genreIds: [],
+      currentGenreIds: [],
+      authorOptions: [],
       total: 0,
+      loading: false,
       listLoading: true,
       listQuery: {
         page: 1,
@@ -137,7 +145,6 @@ export default {
   },
   created() {
     this.getList()
-    this.getAuthors()
     this.getGenres()
   },
   methods: {
@@ -150,12 +157,11 @@ export default {
       })
     },
 
-    getAuthors() {
-      this.listLoading = true
-      fetchAuthorList().then(response => {
-        console.log(response)
-        this.authorList = response.data.items
-        this.listLoading = false
+    searchAuthor(query) {
+      this.loading = true
+      searchAuthorByName({ name: query }).then(response => {
+        this.authorOptions = response.data.items
+        this.loading = false
       })
     },
     getGenres() {
@@ -168,9 +174,9 @@ export default {
     },
 
     handleAddBook() {
-      this.authorIds = []
-      this.genreIds = []
+      this.currentGenreIds = []
       this.book = Object.assign({}, defaultBook)
+      this.authorOptions = []
       this.dialogType = 'new'
       this.dialogVisible = true
     },
@@ -179,45 +185,36 @@ export default {
       this.dialogType = 'edit'
       this.dialogVisible = true
       this.book = deepClone(scope.row)
-      this.authorIds = this.book.author ? [this.book.author._id] : []
-      this.genreIds = []
-      let gen = this.book.genre
-      if (gen) {
-        gen.forEach(g => {
-          this.genreIds.push(g._id)
-        })
-      }
+      // 在作者选项框中绑定的是this.book.author._id -> el-select v-model="book.author._id", 所以选项数据中必须包含this.book.author,否则会直接显示_id
+      this.authorOptions = [this.book.author]
+      const genre = this.book.genre
+      this.currentGenreIds = genre ? genre.map(g => g._id) : []
     },
 
     handleDeleteBook(scope) {
       this.dialogType = 'delete'
       this.dialogVisible = true
       this.book = deepClone(scope.row)
-      this.authorIds = this.book.author ? [this.book.author._id] : []
-      this.genreIds = []
-      let gen = this.book.genre
-      if (gen) {
-        gen.forEach(g => {
-          this.genreIds.push(g._id)
-        })
-      }
+      const genre = this.book.genre
+      this.currentGenreIds = genre ? genre.map(g => g._id) : []
     },
 
     async confirmBook() {
       const selectedId = this.book._id
-      this.authorList.forEach(author => {
-        if (author._id === this.authorIds[0]) {
+      this.authorOptions.forEach(author => {
+        if (author._id === this.book.author._id) {
           this.book.author = author
         }
       })
 
-      this.book.genre = []
-      this.genreIds.forEach(_id => {
-        this.book.genre.push({ _id, name: '' })
+      this.book.genre = this.currentGenreIds.map(_id => {
+        return { _id }
       })
 
       if (this.dialogType === 'edit') {
-        await updateBook(this.book)
+        console.log(('edit', this.book))
+        const { data } = await updateBook(this.book)
+        this.book = data
         for (let index = 0; index < this.bookList.length; index++) {
           if (this.bookList[index]._id === selectedId) {
             this.bookList.splice(index, 1, Object.assign({}, this.book))
@@ -226,7 +223,7 @@ export default {
         }
       } else if (this.dialogType === 'new') {
         const { data } = await addBook(this.book)
-        this.book._id = data._id
+        this.book = data
         this.bookList.push(this.book)
       } else if (this.dialogType === 'delete') {
         const { data } = await deleteBook(selectedId)
