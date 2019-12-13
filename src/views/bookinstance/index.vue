@@ -26,8 +26,8 @@
         </template>
       </el-table-column>
       <el-table-column min-width="40px" align="center" label="状态">
-        <template slot-scope="{row}">
-          <span>{{ row.status }}</span>
+        <template slot-scope="scope">
+          <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column min-width="60px" align="center" label="归还时间">
@@ -126,6 +126,16 @@ const defaultBookinstance = {
 export default {
   name: 'BookinstanceList',
   components: { Pagination },
+  filters: {
+    statusFilter(status) {
+      const statusMap = {
+        可供借阅: 'success',
+        已借出: 'gray',
+        馆藏维护: 'danger'
+      }
+      return statusMap[status]
+    }
+  },
   data() {
     return {
       bookinstance: Object.assign({}, defaultBookinstance),

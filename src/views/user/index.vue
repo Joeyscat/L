@@ -18,7 +18,7 @@
 
       <el-table-column min-width="180px" align="center" label="Registed At">
         <template slot-scope="scope">
-          <span>{{ scope.row.created_time | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
+          <span>{{ parseTime(scope.row.created_time, '{y}-{m}-{d} {h}:{i}') }}</span>
         </template>
       </el-table-column>
 
@@ -92,7 +92,7 @@
 </template>
 
 <script>
-import { deepClone } from '@/utils'
+import { deepClone, parseTime } from '@/utils'
 import { fetchList, addUser, updateUser } from '@/api/user'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 
@@ -187,6 +187,9 @@ export default {
         `,
         type: 'success'
       })
+    },
+    parseTime(time, format) {
+      return parseTime(time, format)
     }
   }
 }
