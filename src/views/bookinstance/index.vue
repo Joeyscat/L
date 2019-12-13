@@ -55,11 +55,20 @@
     <el-dialog :visible.sync="dialogVisible" :title="dialogTitle(dialogType)">
       <el-form :model="bookinstance" label-width="80px" label-position="left">
         <el-form-item label="书籍">
-          <el-select v-if="dialogType!=='edit'" v-model="bookinstance.book._id" placeholder="请选择">
+          <el-select
+            v-if="dialogType!=='edit'"
+            v-model="bookinstance.book._id"
+            style="width:100%;"
+            filterable
+            remote
+            placeholder="请输入关键词"
+            no-data-text="找不到该书籍"
+            :remote-method="searchBooks"
+            :loading="loading">
             <el-option
-              v-for="item in bookList"
+              v-for="item in bookOptions"
               :key="item._id"
-              :label="item.title"
+              :label="item.title + '(' +item.author.name + ')'"
               :value="item._id">
             </el-option>
           </el-select>
@@ -103,7 +112,7 @@ import {
   updateBookinstance,
   deleteBookinstance
 } from '@/api/bookinstance'
-import { fetchList as fetchBookList } from '@/api/book'
+import { searchByName as searchBookByName } from '@/api/book'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 
 const defaultBookinstance = {
@@ -121,11 +130,11 @@ export default {
     return {
       bookinstance: Object.assign({}, defaultBookinstance),
       bookinstanceList: [],
-      bookList: [],
-      bookIds: [],
       total: 0,
       status: ['可供借阅', '馆藏维护', '已借出'],
+      bookOptions: [],
       listLoading: true,
+      loading: false,
       listQuery: {
         page: 1,
         limit: 20
@@ -142,7 +151,6 @@ export default {
   },
   created() {
     this.getList()
-    this.getBooks()
   },
   methods: {
     getList() {
@@ -154,17 +162,20 @@ export default {
       })
     },
 
-    getBooks() {
-      this.listLoading = true
-      // TODO 1.在填写表单的时候点击按钮查询 2.不需要查询book全部字段
-      fetchBookList().then(response => {
-        this.bookList = response.data.items
-        this.listLoading = false
+    searchBooks(query) {
+      if (!query.trim()) {
+        return
+      }
+      this.loading = true
+      searchBookByName({ title: query }).then(response => {
+        this.bookOptions = response.data.items
+        this.loading = false
       })
     },
 
     handleAddBookinstance() {
       this.bookinstance = Object.assign({}, defaultBookinstance)
+      this.bookOptions = []
       this.dialogType = 'new'
       this.dialogVisible = true
     },
@@ -173,6 +184,7 @@ export default {
       this.dialogType = 'edit'
       this.dialogVisible = true
       this.bookinstance = deepClone(scope.row)
+      // this.bookOptions = [this.bookinstance.book]
     },
 
     handleDelete(scope) {
@@ -182,12 +194,17 @@ export default {
     },
 
     async confirmBookinstance() {
+      this.bookOptions.forEach(book => {
+        if (book._id === this.bookinstance.book._id) {
+          this.bookinstance.book = book
+        }
+      })
       const selectedId = this.bookinstance._id
       if (this.dialogType === 'edit') {
-        console.log('update bookinstance ', this.bookinstance)
-        await updateBookinstance(this.bookinstance)
+        const { data } = await updateBookinstance(this.bookinstance)
+        this.bookinstance = data
         for (let index = 0; index < this.bookinstanceList.length; index++) {
-          if (this.bookinstanceList[index]._id === this.bookinstance._id) {
+          if (this.bookinstanceList[index]._id === selectedId) {
             this.bookinstanceList.splice(
               index,
               1,

@@ -63,7 +63,7 @@
             remote
             placeholder="请输入关键词"
             no-data-text="找不到该作者"
-            :remote-method="searchAuthor"
+            :remote-method="searchAuthors"
             :loading="loading">
             <el-option
               v-for="item in authorOptions"
@@ -157,7 +157,10 @@ export default {
       })
     },
 
-    searchAuthor(query) {
+    searchAuthors(query) {
+      if (!query.trim()) {
+        return
+      }
       this.loading = true
       searchAuthorByName({ name: query }).then(response => {
         this.authorOptions = response.data.items
@@ -201,11 +204,14 @@ export default {
 
     async confirmBook() {
       const selectedId = this.book._id
-      this.authorOptions.forEach(author => {
+
+      for (let i = 0; i < this.authorOptions.length; i++) {
+        const author = this.authorOptions[i]
         if (author._id === this.book.author._id) {
           this.book.author = author
+          break
         }
-      })
+      }
 
       this.book.genre = this.currentGenreIds.map(_id => {
         return { _id }
