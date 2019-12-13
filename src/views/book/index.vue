@@ -1,6 +1,19 @@
 <template>
   <div class="app-container">
-    <el-button type="primary" @click="handleAddBook">添加书籍</el-button>
+<!--    <el-button type="primary" @click="handleAddBook">添加书籍</el-button>-->
+    <div class="filter-container">
+      <el-input v-model="listQuery.title" placeholder="书名" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="listQuery.isbn" placeholder="ISBN" style="width: 120px;" class="filter-item" @keyup.enter.native="handleFilter" />
+<!--      <el-select v-model="listQuery.type" placeholder="类型" clearable class="filter-item" style="width: 130px">-->
+<!--        <el-option v-for="item in calendarTypeOptions" :key="item.key" :label="item.display_name+'('+item.key+')'" :value="item.key" />-->
+<!--      </el-select>-->
+      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="getList">
+        搜索
+      </el-button>
+      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleAddBook">
+        添加书籍
+      </el-button>
+    </div>
 
     <el-table
       v-loading="listLoading"
@@ -105,6 +118,7 @@ import { searchByName as searchAuthorByName } from '@/api/author'
 import { fetchList as fetchGenreList } from '@/api/genre'
 import ElDragSelect from '@/components/DragSelect'
 import Pagination from '@/components/Pagination'
+import waves from '@/directive/waves' // waves directive
 
 const defaultBook = {
   genre: [],
@@ -118,6 +132,7 @@ const defaultBook = {
 export default {
   name: 'BookList',
   components: { Pagination, ElDragSelect },
+  directives: { waves },
   data() {
     return {
       book: Object.assign({}, defaultBook),
@@ -131,7 +146,11 @@ export default {
       listLoading: true,
       listQuery: {
         page: 1,
-        limit: 20
+        limit: 20,
+        title: undefined,
+        genre: undefined,
+        isbn: undefined,
+        sort: '+id'
       },
       routes: [],
       dialogVisible: false,
@@ -156,9 +175,11 @@ export default {
         this.listLoading = false
       })
     },
-
+    handleFilter(e) {
+      console.log(e)
+    },
     searchAuthors(query) {
-      if (!query.trim()) {
+      if (!query || !query.trim()) {
         return
       }
       this.loading = true

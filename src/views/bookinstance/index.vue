@@ -173,7 +173,7 @@ export default {
     },
 
     searchBooks(query) {
-      if (!query.trim()) {
+      if (!query || !query.trim()) {
         return
       }
       this.loading = true
