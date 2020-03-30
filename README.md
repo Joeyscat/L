@@ -1,5 +1,7 @@
 # Local Library Client
 
+图书管理系统
+
 ## 主要模块
 
 ### 类型（genre）
@@ -10,9 +12,9 @@
 
 ### 书籍实例（bookinstance）
 
-
 ## TODO
-book条件搜索：
+
+book 条件搜索：
 
 book.title ✔
 
